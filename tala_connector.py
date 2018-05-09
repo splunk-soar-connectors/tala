@@ -260,8 +260,10 @@ class TalaConnector(BaseConnector):
         id_param = param.get('project_ids', None)
 
         ids = dict()
+        id_list = []
         if id_param:
-            ids['ids'] = ','.join([str(i) for i in id_param.split(',')])
+            id_list = [int(i) for i in id_param.split(',')]
+            ids['ids'] = ','.join([str(i) for i in id_list])
 
         headers = { 'auth-token': self._auth_token }
 
@@ -271,17 +273,36 @@ class TalaConnector(BaseConnector):
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
 
-        # Add the response into the data section
+        data = dict()
         for item in response:
-            action_result.add_data(item)
+            data.update({ item['id']: item })
 
         # Add a dictionary that is made up of the most important values from data into the summary
         summary = action_result.update_summary({})
         summary['num_projects'] = len(response)
 
+        # Get project settings (triggered or manual)
+        if not id_list:
+            for item in response:
+                id_list.append(item['id'])
+
+        for project_id in id_list:
+            params = { 'id': project_id }
+            # make rest call
+            ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
+
+            if (phantom.is_fail(ret_val)):
+                return action_result.get_status()
+
+            data[project_id].update(response)
+
+        # Add the response into the data section
+        for item in data:
+            action_result.add_data(data[item])
+
         # Return success, no need to set the message, only the status
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SUCC)
 
     def _handle_update_project(self, param):
 
@@ -295,22 +316,45 @@ class TalaConnector(BaseConnector):
         project_id = param['project_id']
         name = param.get('name', '')
         url = param.get('url', '')
+        automation_mode = param.get('automation_mode')
 
-        request = {
-            "auth-token": self._auth_token,
-            "id": project_id,
-            "name": name,
-            "url": url
-        }
+        data = dict()
+        if name or url:
+            request = {
+                "auth-token": self._auth_token,
+                "id": project_id,
+                "name": name,
+                "url": url
+            }
 
-        # make rest call
-        ret_val, response = self._make_rest_call('/project', action_result, json=request, method='put')
+            # make rest call
+            ret_val, response = self._make_rest_call('/project', action_result, json=request, method='put')
 
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
+            if (phantom.is_fail(ret_val)):
+                return action_result.get_status()
+
+            data.update(response)
+
+        if automation_mode:
+            settings_request = {
+                'auth-token': self._auth_token,
+                'automation-mode': automation_mode,
+                'project-id': project_id
+            }
+
+            # make rest call
+            ret_val, response = self._make_rest_call('/project/settings', action_result, json=settings_request, method='put')
+
+            if (phantom.is_fail(ret_val)):
+                return action_result.get_status()
+
+            data.update(response)
+
+        if not name and not url and not automation_mode:
+            return action_result.set_status(phantom.APP_ERROR, TALA_UPDATE_PROJECT_ERR)
 
         # Add the response into the data section
-        action_result.add_data(response)
+        action_result.add_data(data)
 
         # Return success, no need to set the message, only the status
         # BaseConnector will create a textual message based off of the summary dictionary
@@ -345,64 +389,6 @@ class TalaConnector(BaseConnector):
         # Return success, no need to set the message, only the status
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_DELETE_PROJECT_SUCC)
-
-    def _handle_update_project_settings(self, param):
-
-        # Implement the handler here
-        # use self.save_progress(...) to send progress messages back to the platform
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
-
-        # Add an action result object to self (BaseConnector) to represent the action for this param
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        automation_mode = param['automation_mode']
-        project_id = param['project_id']
-
-        request = {
-            'auth-token': self._auth_token,
-            'automation-mode': automation_mode,
-            'project-id': project_id
-        }
-
-        # make rest call
-        ret_val, response = self._make_rest_call('/project/settings', action_result, json=request, method='put')
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # Add the response into the data section
-        action_result.add_data(response)
-
-        # Return success, no need to set the message, only the status
-        # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS, TALA_UPDATE_PROJECT_SETTINGS_SUCC)
-
-    def _handle_get_project_settings(self, param):
-
-        # Implement the handler here
-        # use self.save_progress(...) to send progress messages back to the platform
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
-
-        # Add an action result object to self (BaseConnector) to represent the action for this param
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        project_id = param['project_id']
-
-        params = { 'id': project_id }
-        headers = { 'auth-token': self._auth_token }
-
-        # make rest call
-        ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # Add the response into the data section
-        action_result.add_data(response)
-
-        # Return success, no need to set the message, only the status
-        # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SETTINGS_SUCC)
 
     def _handle_create_scan(self, param):
 
@@ -548,20 +534,10 @@ class TalaConnector(BaseConnector):
             'tracking-id': tracking_id
         }
 
-        file_name = "tala_AIM_bundle_projectids{}trackingid{}.zip".format(project_id, tracking_id)
+        file_name = "tala_AIM_bundle_ids{}_{}.zip".format(project_id.replace(',', '-'), tracking_id)
 
         # make rest call
-        ret_val = self._download_file_to_vault(action_result, '/bundle', json=request, file_name=file_name)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # Add the response into the data section
-        action_result.add_data({})
-
-        # Return success, no need to set the message, only the status
-        # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return self._download_file_to_vault(action_result, '/bundle', json=request, file_name=file_name)
 
     def _handle_synchronize_projects(self, param):
 
@@ -583,23 +559,13 @@ class TalaConnector(BaseConnector):
                     "ts": str(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
                 }
             ],
-            "projectIDs": [ project_ids ]
+            "projectIDs": [ int(x) for x in project_ids.split(',') ]
         }
 
-        file_name = "tala_enforcement_bundle_projectids{}scanid{}.zip".format(project_ids, scan_id)
+        file_name = "tala_bundle_ids{}_{}.zip".format(project_ids.replace(',', '-'), scan_id)
 
         # make rest call
-        ret_val = self._download_file_to_vault(action_result, '/sync', json=request, file_name=file_name)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # Add the response into the data section
-        action_result.add_data({})
-
-        # Return success, no need to set the message, only the status
-        # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return self._download_file_to_vault(action_result, '/sync', json=request, file_name=file_name)
 
     def handle_action(self, param):
 
@@ -624,12 +590,6 @@ class TalaConnector(BaseConnector):
 
         elif action_id == 'delete_project':
             ret_val = self._handle_delete_project(param)
-
-        elif action_id == 'update_project_settings':
-            ret_val = self._handle_update_project_settings(param)
-
-        elif action_id == 'get_project_settings':
-            ret_val = self._handle_get_project_settings(param)
 
         elif action_id == 'create_scan':
             ret_val = self._handle_create_scan(param)

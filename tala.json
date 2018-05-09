@@ -177,7 +177,7 @@
         {
             "action": "get project",
             "identifier": "get_project",
-            "description": "Get a list of projects",
+            "description": "Get information about a project, or information about all projects if no project id is specified",
             "verbose": "",
             "type": "investigate",
             "read_only": true,
@@ -255,14 +255,14 @@
                     "data_path": "action_result.summary.num_projects",
                     "data_type": "numeric",
                     "example_values": [
-                        2
+                        13
                     ]
                 },
                 {
                     "data_path": "action_result.message",
                     "data_type": "string",
                     "example_values": [
-                        "Num projects: 2"
+                        "Successfully retrieved project(s)"
                     ]
                 },
                 {
@@ -278,6 +278,15 @@
                     "example_values": [
                         1
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "triggered"
+                    ],
+                    "column_name": "Automation Mode",
+                    "column_order": 3
                 }
             ],
             "render": {
@@ -289,7 +298,7 @@
             "action": "update project",
             "identifier": "update_project",
             "description": "Update an existing project",
-            "verbose": "Update the name and/or the url for the project",
+            "verbose": "Update the name, url, and/or automation_mode for the project.",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -320,8 +329,20 @@
                         "url"
                     ],
                     "required": false,
-                    "primary": false,
+                    "primary": true,
                     "order": 2
+                },
+                "automation_mode": {
+                    "description": "Means of deploying a policy. 'manual' indicates a control via UI and 'triggered' indicates control via APIs",
+                    "data_type": "string",
+                    "required": false,
+                    "primary": false,
+                    "value_list": [
+                        "",
+                        "manual",
+                        "triggered"
+                    ],
+                    "order": 3
                 }
             },
             "output": [
@@ -346,7 +367,8 @@
                     "data_path": "action_result.parameter.project_id",
                     "data_type": "string",
                     "example_values": [
-                        "4"
+                        "4",
+                        "1"
                     ],
                     "contains": [
                         "tala project id"
@@ -372,7 +394,7 @@
                         "tala project id"
                     ],
                     "column_name": "Project Id",
-                    "column_order": 2
+                    "column_order": 0
                 },
                 {
                     "data_path": "action_result.data.*.name",
@@ -383,8 +405,8 @@
                     "contains": [
                         "tala project name"
                     ],
-                    "column_name": "Project Name",
-                    "column_order": 0
+                    "column_name": "New Project Name",
+                    "column_order": 1
                 },
                 {
                     "data_path": "action_result.data.*.url",
@@ -395,8 +417,8 @@
                     "contains": [
                         "url"
                     ],
-                    "column_name": "Url",
-                    "column_order": 1
+                    "column_name": "New Url",
+                    "column_order": 2
                 },
                 {
                     "data_path": "action_result.summary",
@@ -424,6 +446,22 @@
                     "data_type": "numeric",
                     "example_values": [
                         1
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
+                    ],
+                    "column_name": "New Automation Mode",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.parameter.automation_mode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
                     ]
                 }
             ],
@@ -552,188 +590,10 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "update project settings",
-            "identifier": "update_project_settings",
-            "description": "Update project settings",
-            "verbose": "",
-            "type": "generic",
-            "read_only": false,
-            "parameters": {
-                "automation_mode": {
-                    "description": "Means of deploying a policy. 'manual' indicates a control via UI and 'triggered' indicates control via APIs",
-                    "data_type": "string",
-                    "required": true,
-                    "primary": true,
-                    "value_list": [
-                        "manual",
-                        "triggered"
-                    ],
-                    "order": 0
-                },
-                "project_id": {
-                    "description": "Id of project to update settings for",
-                    "data_type": "numeric",
-                    "required": true,
-                    "primary": true,
-                    "contains": [
-                        "tala project id"
-                    ],
-                    "order": 1
-                }
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.automation_mode",
-                    "data_type": "string",
-                    "example_values": [
-                        "triggered"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.project_id",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ],
-                    "contains": [
-                        "tala project id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "triggered"
-                    ],
-                    "column_name": "Updated Automation Mode",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Successfully updated project settings"
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "get project settings",
-            "identifier": "get_project_settings",
-            "description": "Retrieve the settings related to a project",
-            "verbose": "",
-            "type": "investigate",
-            "read_only": true,
-            "parameters": {
-                "project_id": {
-                    "description": "Id of project to settings of",
-                    "data_type": "numeric",
-                    "required": true,
-                    "primary": true,
-                    "contains": [
-                        "tala project id"
-                    ],
-                    "order": 0
-                }
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.project_id",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "1"
-                    ],
-                    "contains": [
-                        "tala project id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "triggered"
-                    ],
-                    "column_name": "Automation Mode",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Successfully retrieved project settings"
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
-            "versions": "EQ(*)"
-        },
-        {
             "action": "create scan",
             "identifier": "create_scan",
             "description": "Initiate a scan on a project that has already been scanned",
-            "verbose": "The project scan details from the previous project's scan will be used",
+            "verbose": "The project scan details from the previous project's scan will be used.",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -1520,10 +1380,10 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "download policy bundle",
+            "action": "download policy",
             "identifier": "download_policy_bundle",
             "description": "Download an AIM policy bundle and import it to the vault",
-            "verbose": "Downloads the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking)",
+            "verbose": "Downloads the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking).",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -1642,7 +1502,7 @@
         {
             "action": "synchronize projects",
             "identifier": "synchronize_projects",
-            "description": "Synchronize projects",
+            "description": "Synchronize projects to return a newer policy, which will be added to the vault",
             "verbose": "",
             "type": "generic",
             "read_only": false,
