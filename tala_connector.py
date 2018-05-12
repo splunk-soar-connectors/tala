@@ -560,13 +560,9 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Add a dictionary that is made up of the most important values from data into the summary
-        # summary = action_result.update_summary({})
-        # summary['important_data'] = "value"
-
         # Return success, no need to set the message, only the status
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SUMMARY_SUCC)
 
     def _handle_download_policy_bundle(self, param):
 

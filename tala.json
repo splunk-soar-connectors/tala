@@ -1413,7 +1413,7 @@
                     "data_path": "action_result.message",
                     "data_type": "string",
                     "example_values": [
-                        ""
+                        "Successfully retrieved results"
                     ]
                 },
                 {
@@ -1595,7 +1595,7 @@
                 "project_ids": {
                     "description": "Comma separated project ids",
                     "data_type": "string",
-                    "required": false,
+                    "required": true,
                     "primary": true,
                     "contains": [
                         "tala project id"
