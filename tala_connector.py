@@ -178,11 +178,11 @@ class TalaConnector(BaseConnector):
         vault_ret = Vault.add_attachment(vault_path, self.get_container_id(), file_name=file_name)
         if vault_ret.get('succeeded'):
             action_result.set_status(phantom.APP_SUCCESS, "Transferred file")
-            summary = {
-                    phantom.APP_JSON_VAULT_ID: vault_ret[phantom.APP_JSON_HASH],
-                    phantom.APP_JSON_NAME: file_name,
-                    phantom.APP_JSON_SIZE: vault_ret.get(phantom.APP_JSON_SIZE)}
-            action_result.update_summary(summary)
+            action_result.add_data({
+                            phantom.APP_JSON_VAULT_ID: vault_ret[phantom.APP_JSON_HASH],
+                            phantom.APP_JSON_NAME: file_name,
+                            phantom.APP_JSON_SIZE: vault_ret.get(phantom.APP_JSON_SIZE)
+                        })
             action_result.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
         else:
             action_result.set_status(phantom.APP_ERROR, "Error adding file to vault")
@@ -257,18 +257,64 @@ class TalaConnector(BaseConnector):
         # Add an action result object to self (BaseConnector) to represent the action for this param
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        id_param = param.get('project_ids', None)
+        project_id = param['project_id']
 
-        ids = dict()
-        id_list = []
-        if id_param:
-            id_list = [int(i) for i in id_param.split(',')]
-            ids['ids'] = ','.join([str(i) for i in id_list])
+        param = { 'ids': project_id }
+        headers = { 'auth-token': self._auth_token }
+
+        # make rest call
+        ret_val, response = self._make_rest_call('/project', action_result, params=param, headers=headers)
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        data = dict()
+        for item in response:
+            data.update(item)
+
+        # Get project settings (triggered or manual)
+        params = { 'id': project_id }
+
+        # make rest call
+        ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        data.update(response)
+
+        # Get status (status and scan id for all projects)
+        # make rest call
+        ret_val, response = self._make_rest_call('/scan/status', action_result, json=headers, method='post')
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        for item in response:
+            if int(item['projectIDs']) == project_id:
+                data.update(item['latest-scan-info'])
+                break
+
+        # Add the response into the data section
+        action_result.add_data(data)
+
+        # Return success, no need to set the message, only the status
+        # BaseConnector will create a textual message based off of the summary dictionary
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SUCC)
+
+    def _handle_list_projects(self, param):
+
+        # Implement the handler here
+        # use self.save_progress(...) to send progress messages back to the platform
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+
+        # Add an action result object to self (BaseConnector) to represent the action for this param
+        action_result = self.add_action_result(ActionResult(dict(param)))
 
         headers = { 'auth-token': self._auth_token }
 
         # make rest call
-        ret_val, response = self._make_rest_call('/project', action_result, params=ids, headers=headers)
+        ret_val, response = self._make_rest_call('/project', action_result, headers=headers)
 
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
@@ -282,19 +328,25 @@ class TalaConnector(BaseConnector):
         summary['num_projects'] = len(response)
 
         # Get project settings (triggered or manual)
-        if not id_list:
-            for item in response:
-                id_list.append(item['id'])
-
-        for project_id in id_list:
-            params = { 'id': project_id }
+        for project_id in data:
+            params = { 'id': int(project_id) }
             # make rest call
             ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
 
             if (phantom.is_fail(ret_val)):
                 return action_result.get_status()
 
-            data[project_id].update(response)
+            data[int(project_id)].update(response)
+
+        # Get status (status and scan id for all projects)
+        # make rest call
+        ret_val, response = self._make_rest_call('/scan/status', action_result, json=headers, method='post')
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        for item in response:
+            data[int(item['projectIDs'])].update(item['latest-scan-info'])
 
         # Add the response into the data section
         for item in data:
@@ -302,7 +354,7 @@ class TalaConnector(BaseConnector):
 
         # Return success, no need to set the message, only the status
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SUCC)
+        return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_project(self, param):
 
@@ -527,6 +579,7 @@ class TalaConnector(BaseConnector):
 
         project_id = param['project_ids']
         tracking_id = param['tracking_id']
+        server_conf = param.get('server_conf', None)  # If user wants to download everything, provide server_conf
 
         request = {
             'auth-token': self._auth_token,
@@ -536,8 +589,27 @@ class TalaConnector(BaseConnector):
 
         file_name = "tala_AIM_bundle_ids{}_{}.zip".format(project_id.replace(',', '-'), tracking_id)
 
-        # make rest call
-        return self._download_file_to_vault(action_result, '/bundle', json=request, file_name=file_name)
+        # call /bundle - download AIM policy bundle
+        ret_val = self._download_file_to_vault(action_result, '/bundle', json=request, file_name=file_name)
+
+        if phantom.is_fail(ret_val):
+            return self.set_status(phantom.APP_ERROR)
+
+        if server_conf:  # call /deploy - download web server injection module, template matching library, AIM policy
+            request = {
+                "auth-token": self._auth_token,
+                "serverconf": server_conf
+            }
+            file_name = "tala_enforcement_module_{}.zip".format(server_conf)
+
+            ret_val = self._download_file_to_vault(action_result, '/deploy', json=request, file_name=file_name)
+
+            if phantom.is_fail(ret_val):
+                return self.set_status(phantom.APP_ERROR)
+
+            return self.set_status(phantom.APP_SUCCESS, "Successfully added files to vault")
+
+        return self.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
 
     def _handle_synchronize_projects(self, param):
 
@@ -584,6 +656,9 @@ class TalaConnector(BaseConnector):
 
         elif action_id == 'get_project':
             ret_val = self._handle_get_project(param)
+
+        elif action_id == 'list_projects':
+            ret_val = self._handle_list_projects(param)
 
         elif action_id == 'update_project':
             ret_val = self._handle_update_project(param)

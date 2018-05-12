@@ -175,17 +175,154 @@
             "versions": "EQ(*)"
         },
         {
+            "action": "list projects",
+            "identifier": "list_projects",
+            "description": "List information about all projects",
+            "verbose": "",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {},
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
+                    ],
+                    "column_name": "Automation Mode",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.created",
+                    "data_type": "string",
+                    "example_values": [
+                        "2018-04-25 22:27:18.972528"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.end",
+                    "data_type": "string",
+                    "example_values": [
+                        "2018-05-01_16:04:20.290 PDT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ],
+                    "contains": [
+                        "tala project id"
+                    ],
+                    "column_name": "Project Id",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "New Name"
+                    ],
+                    "contains": [
+                        "tala project name"
+                    ],
+                    "column_name": "Name",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.scan-id",
+                    "data_type": "string",
+                    "example_values": [
+                        "n_6db5d7648f6042e295c8f36425982e4d"
+                    ],
+                    "contains": [
+                        "tala scan id"
+                    ],
+                    "column_name": "Scan Id",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.data.*.start",
+                    "data_type": "string",
+                    "example_values": [
+                        "2018-04-26_10:33:16.322 PDT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "ACTIVE"
+                    ],
+                    "column_name": "Status",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.url",
+                    "data_type": "string",
+                    "example_values": [
+                        "https://splunk.com"
+                    ],
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Url",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.summary.num_projects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        13
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Num projects: 13"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        },
+        {
             "action": "get project",
             "identifier": "get_project",
-            "description": "Get information about a project, or information about all projects if no project id is specified",
+            "description": "Get information about a project",
             "verbose": "",
             "type": "investigate",
             "read_only": true,
             "parameters": {
-                "project_ids": {
-                    "description": "Comma separated project ids, or blank to return all projects",
-                    "data_type": "string",
-                    "required": false,
+                "project_id": {
+                    "description": "Id of project",
+                    "data_type": "numeric",
+                    "required": true,
                     "primary": true,
                     "contains": [
                         "tala project id"
@@ -202,67 +339,111 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.project_ids",
+                    "data_path": "action_result.parameter.project_id",
                     "data_type": "numeric",
                     "contains": [
                         "tala project id"
+                    ],
+                    "example_values": [
+                        2
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "triggered",
+                        "manual"
+                    ],
+                    "column_name": "Automation Mode",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.created",
                     "data_type": "string",
                     "example_values": [
-                        "2018-04-25 22:27:18.972528"
+                        "2018-04-25 22:27:18.972528",
+                        "2018-04-26 17:32:33.581016"
                     ]
                 },
                 {
                     "data_path": "action_result.data.*.id",
                     "data_type": "numeric",
                     "example_values": [
-                        1
+                        1,
+                        2
                     ],
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Id",
-                    "column_order": 2
+                    "column_name": "Project Id",
+                    "column_order": 0
                 },
                 {
                     "data_path": "action_result.data.*.name",
                     "data_type": "string",
                     "example_values": [
-                        "Homepage"
+                        "Homepage",
+                        "Amazon"
                     ],
                     "contains": [
                         "tala project name"
                     ],
                     "column_name": "Name",
-                    "column_order": 0
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.scan-id",
+                    "data_type": "string",
+                    "example_values": [
+                        "n_6db5d7648f6042e295c8f36425982e4d"
+                    ],
+                    "contains": [
+                        "tala scan id"
+                    ],
+                    "column_name": "Scan Id",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.data.*.start",
+                    "data_type": "string",
+                    "example_values": [
+                        "2018-04-26_10:33:16.322 PDT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "ACTIVE"
+                    ],
+                    "column_name": "Status",
+                    "column_order": 4
                 },
                 {
                     "data_path": "action_result.data.*.url",
                     "data_type": "string",
                     "example_values": [
-                        "https://phantom.us"
+                        "https://www.amazon.com/"
                     ],
                     "contains": [
                         "url"
                     ],
                     "column_name": "Url",
-                    "column_order": 1
+                    "column_order": 2
                 },
                 {
-                    "data_path": "action_result.summary.num_projects",
-                    "data_type": "numeric",
+                    "data_path": "action_result.summary",
+                    "data_type": "string",
                     "example_values": [
-                        13
+                        ""
                     ]
                 },
                 {
                     "data_path": "action_result.message",
                     "data_type": "string",
                     "example_values": [
-                        "Successfully retrieved project(s)"
+                        "Successfully retrieved project"
                     ]
                 },
                 {
@@ -278,15 +459,6 @@
                     "example_values": [
                         1
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "triggered"
-                    ],
-                    "column_name": "Automation Mode",
-                    "column_order": 3
                 }
             ],
             "render": {
@@ -354,6 +526,13 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.parameter.automation_mode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
+                    ]
+                },
+                {
                     "data_path": "action_result.parameter.name",
                     "data_type": "string",
                     "example_values": [
@@ -383,6 +562,15 @@
                     "contains": [
                         "url"
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
+                    ],
+                    "column_name": "New Automation Mode",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.id",
@@ -446,22 +634,6 @@
                     "data_type": "numeric",
                     "example_values": [
                         1
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "manual"
-                    ],
-                    "column_name": "New Automation Mode",
-                    "column_order": 3
-                },
-                {
-                    "data_path": "action_result.parameter.automation_mode",
-                    "data_type": "string",
-                    "example_values": [
-                        "manual"
                     ]
                 }
             ],
@@ -590,7 +762,7 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "create scan",
+            "action": "scan url",
             "identifier": "create_scan",
             "description": "Initiate a scan on a project that has already been scanned",
             "verbose": "The project scan details from the previous project's scan will be used.",
@@ -867,118 +1039,7 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "get status",
-            "identifier": "get_status",
-            "description": "Get status of all projects",
-            "verbose": "",
-            "type": "investigate",
-            "read_only": true,
-            "parameters": {},
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.latest-scan-info.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "Amazon"
-                    ],
-                    "column_name": "Name",
-                    "column_order": 3
-                },
-                {
-                    "data_path": "action_result.data.*.latest-scan-info.scan-id",
-                    "data_type": "string",
-                    "example_values": [
-                        "n_6db5d7648f6042e295c8f36425982e4d"
-                    ],
-                    "contains": [
-                        "tala scan id"
-                    ],
-                    "column_name": "Scan Id",
-                    "column_order": 4
-                },
-                {
-                    "data_path": "action_result.data.*.latest-scan-info.start",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-04-26_10:33:16.322 PDT"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.latest-scan-info.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "ACTIVE"
-                    ],
-                    "column_name": "Status",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.latest-scan-info.url",
-                    "data_type": "string",
-                    "example_values": [
-                        "https://www.amazon.com/"
-                    ],
-                    "contains": [
-                        "url"
-                    ],
-                    "column_name": "Url",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.projectIDs",
-                    "data_type": "string",
-                    "example_values": [
-                        "2"
-                    ],
-                    "contains": [
-                        "tala project id"
-                    ],
-                    "column_name": "Project Id",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.summary.num_projects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        6
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Num projects: 6"
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "get summary",
+            "action": "get results",
             "identifier": "get_summary",
             "description": "Get the abstract information model (AIM) representation of the latest scan on a project",
             "verbose": "Summarize the abstract information model (AIM) representation of the latest scan on a given project. The AIM details includes the number of resources identified by the Tala scan, as well as relevant security headers, the Tala security score (out of 100) assigned to the site (both before and after applying the Tala policy generated for this scan), and suggestions for how the scan can be improved.",
@@ -1380,10 +1441,10 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "download policy",
+            "action": "get policy",
             "identifier": "download_policy_bundle",
             "description": "Download an AIM policy bundle and import it to the vault",
-            "verbose": "Downloads the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking).",
+            "verbose": "Download the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking). If server_conf is provided, the web server injection module, template matching library, and latest AIM policy are downloaded. If the configuration of the server is not binary compatible with a pre-built version of the web module, the source code for the web module will be downloaded instead.",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -1405,7 +1466,14 @@
                     "contains": [
                         "tala tracking id"
                     ],
-                    "order": 0
+                    "order": 1
+                },
+                "server_conf": {
+                    "description": "Server configuration",
+                    "data_type": "string",
+                    "required": false,
+                    "primary": false,
+                    "order": 2
                 }
             },
             "output": [
@@ -1417,13 +1485,63 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.vault_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "ec52c189ff8177fc3e322fef1b705e5009e26705"
+                    ],
+                    "contains": [
+                        "vault id",
+                        "sha1"
+                    ],
+                    "column_name": "Vault Id",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "tala_AIM_bundle_ids1_1.zip"
+                    ],
+                    "column_name": "Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1353
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully added file to vault"
+                    ]
+                },
+                {
                     "data_path": "action_result.parameter.project_ids",
                     "data_type": "string",
                     "example_values": [
-                        "1,2"
+                        "1"
                     ],
                     "contains": [
                         "tala project id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.server_conf",
+                    "data_type": "string",
+                    "example_values": [
+                        "apache2.4"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string",
+                    "example_values": [
+                        ""
                     ]
                 },
                 {
@@ -1434,49 +1552,6 @@
                     ],
                     "contains": [
                         "tala tracking id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "tala_bundle_projectids1,2trackingid1.zip"
-                    ],
-                    "column_name": "Name",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.summary.size",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1352
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.vault_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "e0e334206559cc75ee5243b1d5ed75f93196f598"
-                    ],
-                    "contains": [
-                        "sha1",
-                        "vault id"
-                    ],
-                    "column_name": "Vault Id",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Vault id: e0e334206559cc75ee5243b1d5ed75f93196f598\nName: tala_bundle_projectids1,2trackingid1.zip\nSize: 1352"
                     ]
                 },
                 {
