@@ -1546,9 +1546,9 @@
                 },
                 {
                     "data_path": "action_result.parameter.tracking_id",
-                    "data_type": "string",
+                    "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ],
                     "contains": [
                         "tala tracking id"
