@@ -1444,7 +1444,7 @@
             "action": "get policy",
             "identifier": "download_policy_bundle",
             "description": "Download an AIM policy bundle and import it to the vault",
-            "verbose": "Download the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking). If server_conf is provided, the web server injection module, template matching library, and latest AIM policy are downloaded. If the configuration of the server is not binary compatible with a pre-built version of the web module, the source code for the web module will be downloaded instead.",
+            "verbose": "Download the AIM bundle, which contains configuration data for enforcing a policy on one or more projects (Blocking). If server_conf is provided, the web server injection module, template matching library, and latest AIM policy are downloaded. If the configuration of the server is not binary compatible with a pre-built version of the web module, the source code for the web module will be downloaded instead. If the configuration of the server is invalid, an empty zip file will be returned.",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -1460,7 +1460,7 @@
                 },
                 "tracking_id": {
                     "description": "Tracking id",
-                    "data_type": "string",
+                    "data_type": "numeric",
                     "required": true,
                     "primary": true,
                     "contains": [
@@ -1578,7 +1578,7 @@
             "action": "synchronize projects",
             "identifier": "synchronize_projects",
             "description": "Synchronize projects to return a newer policy, which will be added to the vault",
-            "verbose": "",
+            "verbose": "Because validation cannot be done on a scan id, if an invalid scan id is provided, then an empty zip file will be returned.",
             "type": "generic",
             "read_only": false,
             "parameters": {

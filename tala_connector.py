@@ -452,7 +452,11 @@ class TalaConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         project_ids = param.get('project_ids', None)
-        project_ids_list = [int(x) for x in project_ids.split(",")]
+
+        try:
+            project_ids_list = [int(x) for x in project_ids.split(",")]
+        except:
+            return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
             "auth-token": self._auth_token,
@@ -574,7 +578,12 @@ class TalaConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         project_id = param['project_ids']
-        tracking_id = param['tracking_id']
+        try:
+            [int(x) for x in project_id.split(",")]
+        except:
+            return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
+
+        tracking_id = str(param['tracking_id'])
         server_conf = param.get('server_conf', None)  # If user wants to download everything, provide server_conf
 
         request = {
@@ -618,6 +627,10 @@ class TalaConnector(BaseConnector):
 
         scan_id = param['scan_id']
         project_ids = param['project_ids']
+        try:
+            project_ids_formatted = [int(x) for x in project_ids.split(",")]
+        except:
+            return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
             "auth-token": self._auth_token,
@@ -627,7 +640,7 @@ class TalaConnector(BaseConnector):
                     "ts": str(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
                 }
             ],
-            "projectIDs": [ int(x) for x in project_ids.split(',') ]
+            "projectIDs": project_ids_formatted
         }
 
         file_name = "tala_bundle_ids{}_{}.zip".format(project_ids.replace(',', '-'), scan_id)
