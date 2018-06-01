@@ -1664,7 +1664,7 @@
                         "n_6db5d7648f6042e295c8f36425982e4d"
                     ],
                     "column_name": "Scan Id",
-                    "column_order": 2
+                    "column_order": 1
                 },
                 {
                     "data_path": "action_result.parameter.project_ids",
