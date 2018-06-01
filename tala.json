@@ -1612,66 +1612,68 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.project_ids",
+                    "data_path": "action_result.data.*.vault_id",
                     "data_type": "string",
                     "example_values": [
-                        "1,2"
+                        "da39a3ee5e6b4b0d3255bfef95601890afd80709"
                     ],
                     "contains": [
-                        "tala project id"
+                        "sha1",
+                        "vault id"
+                    ], 
+                    "column_name": "Vault Id",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "tala_bundle_ids1-2-3-4_n_6db5d7648f6042e295c8f36425982e4d.zip"
+                    ], 
+                    "column_name": "Name",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "numeric",
+                    "example_values": [
+                        0
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.scan_id",
+                    "data_path": "action_result.message",
                     "data_type": "string",
                     "example_values": [
-                        "n_6db5d7648f6042e295c8f36425982e4d"
-                    ],
-                    "contains": [
-                        "tala scan id"
-                    ],
-                    "column_name": "Scan Id",
-                    "column_order": 1
+                        "Successfully added file to vault"
+                    ]
                 },
                 {
-                    "data_path": "action_result.data",
+                    "data_path": "action_result.summary",
                     "data_type": "string",
                     "example_values": [
                         ""
                     ]
                 },
                 {
-                    "data_path": "action_result.summary.name",
+                    "data_path": "action_result.parameter.scan_id",
                     "data_type": "string",
-                    "example_values": [
-                        "tala_enforcement_bundle_projectids1,2scanidn_6db5d7648f6042e295c8f36425982e4d.zip"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.size",
-                    "data_type": "numeric",
-                    "example_values": [
-                        53
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.vault_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "e2ac7313e3359196c5f9f32325b85283cbe3a2b7"
-                    ],
                     "contains": [
-                        "sha1",
-                        "vault id"
+                        "tala scan id"
                     ],
-                    "column_name": "Vault Id",
-                    "column_order": 0
+                    "example_values": [
+                        "n_6db5d7648f6042e295c8f36425982e4d"
+                    ],
+                    "column_name": "Scan Id",
+                    "column_order": 1
                 },
                 {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.parameter.project_ids",
                     "data_type": "string",
+                    "contains": [
+                        "tala project id"
+                    ],
                     "example_values": [
-                        "Vault id: e2ac7313e3359196c5f9f32325b85283cbe3a2b7\nName: tala_enforcement_bundle_projectids1,2scanidn_6db5d7648f6042e295c8f36425982e4d.zip\nSize: 53"
+                        "1,2,3,4"
                     ]
                 },
                 {
