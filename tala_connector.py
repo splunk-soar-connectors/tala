@@ -206,7 +206,7 @@ class TalaConnector(BaseConnector):
         ret_val, response = self._make_rest_call('/project', action_result, params=None, headers=headers)
 
         if (phantom.is_fail(ret_val)):
-            self.save_progress("Test Connectivity Failed.")
+            self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
 
         # Return success
