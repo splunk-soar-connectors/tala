@@ -291,8 +291,8 @@ class TalaConnector(BaseConnector):
             return action_result.get_status()
 
         for item in response:
-            if int(item['projectIDs']) == project_id:
-                data.update(item['latest-scan-info'])
+            if int(item['project-id']) == project_id:
+                data.update(item['latest-scan-status'])
                 break
 
         # Add the response into the data section
@@ -346,7 +346,7 @@ class TalaConnector(BaseConnector):
             return action_result.get_status()
 
         for item in response:
-            data[int(item['projectIDs'])].update(item['latest-scan-info'])
+            data[int(item['project-id'])].update(item['latest-scan-status'])
 
         # Add the response into the data section
         for item in data:
