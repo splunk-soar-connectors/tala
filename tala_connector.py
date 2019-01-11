@@ -1,5 +1,5 @@
 # File: tala_connector.py
-# Copyright (c) 2018 Splunk Inc.
+# Copyright (c) 2018-2019 Splunk Inc.
 #
 # SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
 # without a valid written license from Splunk Inc. is PROHIBITED.# Phantom App imports
@@ -149,33 +149,40 @@ class TalaConnector(BaseConnector):
     def _download_file_to_vault(self, action_result, endpoint, json, file_name):
         """ Download a file and add it to the vault """
 
-        guid = uuid.uuid4()
-        tmp_dir = "/vault/tmp/{}".format(guid)
-        zip_path = "{}/{}".format(tmp_dir, file_name)
+        if hasattr(Vault, 'get_vault_tmp_dir'):
+            try:
+                vault_ret = Vault.create_attachment(json, self.get_container_id())
+            except Exception as e:
+                return action_result.set_status(phantom.APP_ERROR, "Could not add file to vault: {0}".format(e))
+        else:
+            guid = uuid.uuid4()
+            tmp_dir = "/vault/tmp/{}".format(guid)
+            zip_path = "{}/{}".format(tmp_dir, file_name)
 
-        try:
-            os.makedirs(tmp_dir)
-        except Exception as e:
-            msg = "Unable to create temporary folder '{}': ".format(tmp_dir)
-            return action_result.set_status(phantom.APP_ERROR, msg, e)
+            try:
+                os.makedirs(tmp_dir)
+            except Exception as e:
+                msg = "Unable to create temporary folder '{}': ".format(tmp_dir)
+                return action_result.set_status(phantom.APP_ERROR, msg, e)
 
-        url = self._base_url + endpoint
-        try:
-            r = requests.post(
-                str(url),
-                json=json,
-                headers={ 'Content-Type': 'application/json' }
-            )
-        except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
+            url = self._base_url + endpoint
+            try:
+                r = requests.post(
+                    str(url),
+                    json=json,
+                    headers={ 'Content-Type': 'application/json' }
+                )
+            except Exception as e:
+                return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
 
-        with open(zip_path, 'wb') as f:
-            f.write(r.content)
-            f.close()
+            with open(zip_path, 'wb') as f:
+                f.write(r.content)
+                f.close()
 
-        vault_path = "{}/{}".format(tmp_dir, file_name)
+            vault_path = "{}/{}".format(tmp_dir, file_name)
 
-        vault_ret = Vault.add_attachment(vault_path, self.get_container_id(), file_name=file_name)
+            vault_ret = Vault.add_attachment(vault_path, self.get_container_id(), file_name=file_name)
+
         if vault_ret.get('succeeded'):
             action_result.set_status(phantom.APP_SUCCESS, "Transferred file")
             action_result.add_data({

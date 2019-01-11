@@ -9,12 +9,12 @@
     "product_name": "Tala",
     "product_version_regex": ".*",
     "publisher": "Phantom",
-    "license": "Copyright (c) 2018 Splunk Inc.",
+    "license": "Copyright (c) 2018-2019 Splunk Inc.",
     "app_version": "1.0.7",
     "utctime_updated": "2018-12-07T01:53:53.000000Z",
     "package_name": "phantom_tala",
     "main_module": "tala_connector.pyc",
-    "min_phantom_version": "3.5.180",
+    "min_phantom_version": "4.0.1068",
     "app_wizard_version": "1.0.0",
     "configuration": {
         "base_url": {
