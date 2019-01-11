@@ -153,7 +153,7 @@ class TalaConnector(BaseConnector):
             try:
                 vault_ret = Vault.create_attachment(json, self.get_container_id())
             except Exception as e:
-                return action_result.set_status(phantom.APP_ERROR, "Could not file to vault: {0}".format(e))
+                return action_result.set_status(phantom.APP_ERROR, "Could not add file to vault: {0}".format(e))
         else:
             guid = uuid.uuid4()
             tmp_dir = "/vault/tmp/{}".format(guid)
