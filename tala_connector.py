@@ -149,9 +149,19 @@ class TalaConnector(BaseConnector):
     def _download_file_to_vault(self, action_result, endpoint, json, file_name):
         """ Download a file and add it to the vault """
 
+        url = self._base_url + endpoint
+        try:
+            r = requests.post(
+                str(url),
+                json=json,
+                headers={ 'Content-Type': 'application/json' }
+            )
+        except Exception as e:
+            return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
+
         if hasattr(Vault, 'get_vault_tmp_dir'):
             try:
-                vault_ret = Vault.create_attachment(json, self.get_container_id())
+                vault_ret = Vault.create_attachment(r.content, self.get_container_id(), file_name=file_name)
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Could not add file to vault: {0}".format(e))
         else:
@@ -164,16 +174,6 @@ class TalaConnector(BaseConnector):
             except Exception as e:
                 msg = "Unable to create temporary folder '{}': ".format(tmp_dir)
                 return action_result.set_status(phantom.APP_ERROR, msg, e)
-
-            url = self._base_url + endpoint
-            try:
-                r = requests.post(
-                    str(url),
-                    json=json,
-                    headers={ 'Content-Type': 'application/json' }
-                )
-            except Exception as e:
-                return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
 
             with open(zip_path, 'wb') as f:
                 f.write(r.content)
