@@ -1,6 +1,6 @@
 # File: tala_connector.py
 #
-# Copyright (c) 2018-2019 Splunk Inc.
+# Copyright (c) 2018-2021 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
 #
 #
 # without a valid written license from Splunk Inc. is PROHIBITED.# Phantom App imports
+import datetime
+import json
+import os
+import uuid
+
 import phantom.app as phantom
-from phantom.base_connector import BaseConnector
+# import shutil
+import requests
+from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
+from phantom.base_connector import BaseConnector
 from phantom.vault import Vault as Vault
 
 # Usage of the consts file is recommended
 from tala_consts import *
-import uuid
-import os
-# import shutil
-import requests
-import json
-import datetime
-from bs4 import BeautifulSoup
 
 
 class RetVal(tuple):
@@ -68,7 +69,7 @@ class TalaConnector(BaseConnector):
             split_lines = error_text.split('\n')
             split_lines = [x.strip() for x in split_lines if x.strip()]
             error_text = '\n'.join(split_lines)
-        except:
+        except Exception:
             error_text = "Cannot parse error details"
 
         if 200 <= status_code < 399:
@@ -87,7 +88,8 @@ class TalaConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(str(e))), None)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(
+                str(e))), None)
 
         # Please specify the status codes here
         if 200 <= r.status_code < 399:
@@ -153,7 +155,8 @@ class TalaConnector(BaseConnector):
                             verify=config.get('verify_server_cert', False),
                             params=params)
         except Exception as e:
-            return RetVal(action_result.set_status( phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(str(e))), resp_json)
+            return RetVal(action_result.set_status( phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(
+                str(e))), resp_json)
 
         return self._process_response(r, action_result)
 
@@ -262,9 +265,9 @@ class TalaConnector(BaseConnector):
         summary = action_result.update_summary({})
         summary['project_id'] = response['id']
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_CREATED_PROJECT_SUCC)
 
     def _handle_get_project(self, param):
 
@@ -316,7 +319,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(data)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SUCC)
 
@@ -370,9 +373,9 @@ class TalaConnector(BaseConnector):
         for item in data:
             action_result.add_data(data[item])
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_LIST_PROJECTS_SUCC)
 
     def _handle_update_project(self, param):
 
@@ -392,10 +395,12 @@ class TalaConnector(BaseConnector):
         if name or url:
             request = {
                 "auth-token": self._auth_token,
-                "id": project_id,
-                "name": name,
-                "url": url
+                "id": project_id
             }
+            if name:
+                request["name"] = name
+            if url:
+                request["url"] = url
 
             # make rest call
             ret_val, response = self._make_rest_call('/project', action_result, json=request, method='put')
@@ -426,7 +431,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(data)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_UPDATE_PROJECT_SUCC)
 
@@ -456,7 +461,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_DELETE_PROJECT_SUCC)
 
@@ -472,8 +477,12 @@ class TalaConnector(BaseConnector):
         project_ids = param.get('project_ids', None)
 
         try:
-            project_ids_list = [int(x) for x in project_ids.split(",")]
-        except:
+            project_ids_list = []
+            for x in project_ids.split(","):
+                if int(x) < 0:
+                    raise(Exception)
+                project_ids_list.append(int(x))
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
@@ -497,9 +506,9 @@ class TalaConnector(BaseConnector):
         summary = action_result.update_summary({})
         summary['message'] = response['message']
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_CREATED_SCAN_SUCC)
 
     def _handle_get_scan_setting(self, param):
 
@@ -524,7 +533,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SCAN_SETTINGS_SUCC)
 
@@ -553,9 +562,9 @@ class TalaConnector(BaseConnector):
         summary = action_result.update_summary({})
         summary['num_projects'] = len(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SCAN_STATUS_SUCC)
 
     def _handle_get_summary(self, param):
 
@@ -582,7 +591,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SUMMARY_SUCC)
 
@@ -597,8 +606,12 @@ class TalaConnector(BaseConnector):
 
         project_id = param['project_ids']
         try:
-            [int(x) for x in project_id.split(",")]
-        except:
+            project_id_formatted = []
+            for x in project_id.split(","):
+                if int(x) < 0:
+                    raise(Exception)
+                project_id_formatted.append(int(x))
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         tracking_id = str(param['tracking_id'])
@@ -618,21 +631,21 @@ class TalaConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return self.set_status(phantom.APP_ERROR)
 
-        if server_conf:  # call /deploy - download web server injection module, template matching library, AIM policy
+        if server_conf:
             request = {
                 "auth-token": self._auth_token,
                 "serverconf": server_conf
             }
             file_name = "tala_enforcement_module_{}.zip".format(server_conf)
 
+            # call /deploy - download web server injection module, template matching library, AIM policy
             ret_val = self._download_file_to_vault(action_result, '/deploy', json=request, file_name=file_name)
 
             if phantom.is_fail(ret_val):
                 return self.set_status(phantom.APP_ERROR)
 
-            return self.set_status(phantom.APP_SUCCESS, "Successfully added files to vault")
-
-        return self.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
+        # Return success status with appropriate message
+        return self.set_status(phantom.APP_SUCCESS, TALA_DOWNLOAD_POLICY_BUNDLE_SUCC)
 
     def _handle_synchronize_projects(self, param):
 
@@ -646,8 +659,12 @@ class TalaConnector(BaseConnector):
         scan_id = param['scan_id']
         project_ids = param['project_ids']
         try:
-            project_ids_formatted = [int(x) for x in project_ids.split(",")]
-        except:
+            project_ids_formatted = []
+            for x in project_ids.split(","):
+                if int(x) < 0:
+                    raise(Exception)
+                project_ids_formatted.append(int(x))
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
@@ -736,8 +753,9 @@ class TalaConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import pudb
     import argparse
+
+    import pudb
 
     pudb.set_trace()
 
@@ -753,15 +771,15 @@ if __name__ == '__main__':
     username = args.username
     password = args.password
 
-    if (username is not None and password is None):
+    if username is not None and password is None:
 
         # User specified a username but not a password, so ask
         import getpass
         password = getpass.getpass("Password: ")
 
-    if (username and password):
+    if username and password:
         try:
-            print ("Accessing the Login page")
+            print("Accessing the Login page")
             r = requests.get("https://127.0.0.1/login", verify=False)
             csrftoken = r.cookies['csrftoken']
 
@@ -774,11 +792,11 @@ if __name__ == '__main__':
             headers['Cookie'] = 'csrftoken=' + csrftoken
             headers['Referer'] = 'https://127.0.0.1/login'
 
-            print ("Logging into Platform to get the session id")
+            print("Logging into Platform to get the session id")
             r2 = requests.post("https://127.0.0.1/login", verify=False, data=data, headers=headers)
             session_id = r2.cookies['sessionid']
         except Exception as e:
-            print ("Unable to get session id from the platfrom. Error: " + str(e))
+            print("Unable to get session id from the platfrom. Error: " + str(e))
             exit(1)
 
     with open(args.input_test_json) as f:
@@ -794,6 +812,6 @@ if __name__ == '__main__':
             connector._set_csrf_info(csrftoken, headers['Referer'])
 
         ret_val = connector._handle_action(json.dumps(in_json), None)
-        print (json.dumps(json.loads(ret_val), indent=4))
+        print(json.dumps(json.loads(ret_val), indent=4))
 
     exit(0)
