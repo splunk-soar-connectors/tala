@@ -1050,7 +1050,7 @@
                     "example_values": [
                         "tala-cloud"
                     ],
-                    "column_name": "Report Uri",
+                    "column_name": "Report URI",
                     "column_order": 4
                 },
                 {
