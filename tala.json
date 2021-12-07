@@ -1763,10 +1763,6 @@
     "pip_dependencies": {
         "wheel": [
             {
-                "module": "backports.functools-lru-cache",
-                "input_file": "wheels/backports.functools_lru_cache-1.6.4-py2.py3-none-any.whl"
-            },
-            {
                 "module": "beautifulsoup4",
                 "input_file": "wheels/beautifulsoup4-4.9.1-py2-none-any.whl"
             },
