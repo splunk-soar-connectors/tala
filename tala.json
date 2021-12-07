@@ -15,7 +15,7 @@
     "utctime_updated": "2019-01-16T01:34:51.000000Z",
     "package_name": "phantom_tala",
     "main_module": "tala_connector.py",
-    "min_phantom_version": "4.0.1068",
+    "min_phantom_version": "5.0.0",
     "app_wizard_version": "1.0.0",
     "configuration": {
         "base_url": {
