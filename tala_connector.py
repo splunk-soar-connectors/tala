@@ -27,6 +27,7 @@ import requests
 from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
+from phantom.vault import Vault
 
 # Usage of the consts file is recommended
 from tala_consts import *
@@ -176,7 +177,7 @@ class TalaConnector(BaseConnector):
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
 
-        if hasattr(ph_rules, 'get_vault_tmp_dir'):
+        if hasattr(Vault, 'get_vault_tmp_dir'):
             try:
                 success, message, new_vault_id = ph_rules.vault_add(
                     container=self.get_container_id(),
@@ -210,9 +211,20 @@ class TalaConnector(BaseConnector):
 
         if success:
             action_result.set_status(phantom.APP_SUCCESS, "Transferred file")
+            # Check if file with same file name and size is available in vault and save only if it is not available
+            try:
+                _, _, data = ph_rules.vault_info(container_id=self.get_container_id(), vault_id=new_vault_id, file_name=file_name)
+                if not data:
+                    _, _, data = ph_rules.vault_info(vault_id=new_vault_id)
+                data = list(data)[0]
+                file_size = data.get('size')
+            except Exception:
+                return action_result.set_status(phantom.APP_ERROR, "Error: failed to find vault ID: {}".format(new_vault_id))
+
             action_result.add_data({
                             phantom.APP_JSON_VAULT_ID: new_vault_id,
-                            phantom.APP_JSON_NAME: file_name
+                            phantom.APP_JSON_NAME: file_name,
+                            phantom.APP_JSON_SIZE: file_size
                         })
             action_result.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
         else:
