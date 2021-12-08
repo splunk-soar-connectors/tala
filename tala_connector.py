@@ -214,8 +214,6 @@ class TalaConnector(BaseConnector):
             # Check if file with same file name and size is available in vault and save only if it is not available
             try:
                 _, _, data = ph_rules.vault_info(container_id=self.get_container_id(), vault_id=new_vault_id, file_name=file_name)
-                if not data:
-                    _, _, data = ph_rules.vault_info(vault_id=new_vault_id)
                 data = list(data)[0]
                 file_size = data.get('size')
             except Exception:
