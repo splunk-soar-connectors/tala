@@ -21,12 +21,12 @@ import os
 import uuid
 
 import phantom.app as phantom
+import phantom.rules as ph_rules
 # import shutil
 import requests
 from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
-from phantom.vault import Vault
 
 # Usage of the consts file is recommended
 from tala_consts import *
@@ -176,9 +176,9 @@ class TalaConnector(BaseConnector):
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
 
-        if hasattr(Vault, 'get_vault_tmp_dir'):
+        if hasattr(ph_rules, 'get_vault_tmp_dir'):
             try:
-                success, message, new_vault_id = phantom.vault_add(
+                success, message, new_vault_id = ph_rules.vault_add(
                     container=self.get_container_id(),
                     file_location=r.content,
                     file_name=file_name
@@ -202,7 +202,7 @@ class TalaConnector(BaseConnector):
 
             vault_path = "{}/{}".format(tmp_dir, file_name)
 
-            success, message, new_vault_id = phantom.vault_add(
+            success, message, new_vault_id = ph_rules.vault_add(
                 container=self.get_container_id(),
                 file_location=vault_path,
                 file_name=file_name
