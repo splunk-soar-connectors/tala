@@ -8,13 +8,14 @@
     "logo_dark": "logo_tala_dark.svg",
     "product_name": "Tala",
     "product_version_regex": ".*",
-    "publisher": "Phantom",
-    "license": "Copyright (c) 2018-2019 Splunk Inc.",
-    "app_version": "1.0.9",
+    "publisher": "Splunk Community",
+    "license": "Copyright (c) 2018-2021 Splunk Inc.",
+    "app_version": "2.0.0",
+    "python_version": "2.7",
     "utctime_updated": "2019-01-16T01:34:51.000000Z",
     "package_name": "phantom_tala",
-    "main_module": "tala_connector.pyc",
-    "min_phantom_version": "4.0.1068",
+    "main_module": "tala_connector.py",
+    "min_phantom_version": "5.0.0",
     "app_wizard_version": "1.0.0",
     "configuration": {
         "base_url": {
@@ -35,7 +36,6 @@
             "action": "test connectivity",
             "identifier": "test_connectivity",
             "description": "Validate the asset configuration for connectivity using supplied configuration",
-            "verbose": "",
             "type": "test",
             "parameters": {},
             "output": [],
@@ -46,7 +46,6 @@
             "action": "create project",
             "identifier": "create_project",
             "description": "Create a new project",
-            "verbose": "",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -76,7 +75,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -100,15 +100,6 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.created",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-04-27 18:58:20.435"
-                    ],
-                    "column_name": "Time Created",
-                    "column_order": 1
-                },
-                {
                     "data_path": "action_result.data.*.id",
                     "data_type": "numeric",
                     "example_values": [
@@ -117,8 +108,17 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.created",
+                    "data_type": "string",
+                    "example_values": [
+                        "2018-04-27 18:58:20.435"
+                    ],
+                    "column_name": "Time Created",
+                    "column_order": 1
                 },
                 {
                     "data_path": "action_result.data.*.name",
@@ -178,7 +178,6 @@
             "action": "list projects",
             "identifier": "list_projects",
             "description": "List information about all projects",
-            "verbose": "",
             "type": "investigate",
             "read_only": true,
             "parameters": {},
@@ -187,18 +186,9 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "manual",
-                        "triggered"
-                    ],
-                    "column_name": "Automation Mode",
-                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.completed",
@@ -230,7 +220,7 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 0
                 },
                 {
@@ -253,16 +243,14 @@
                     "column_order": 1
                 },
                 {
-                    "data_path": "action_result.data.*.scan-id",
+                    "data_path": "action_result.data.*.automationMode",
                     "data_type": "string",
                     "example_values": [
-                        "n_6db5d7648f6042e295c8f36425982e4d"
+                        "manual",
+                        "triggered"
                     ],
-                    "contains": [
-                        "tala scan id"
-                    ],
-                    "column_name": "Scan Id",
-                    "column_order": 5
+                    "column_name": "Automation Mode",
+                    "column_order": 2
                 },
                 {
                     "data_path": "action_result.data.*.scan-status",
@@ -271,6 +259,18 @@
                         "SUCCESS"
                     ],
                     "column_name": "Status",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.url",
+                    "data_type": "string",
+                    "example_values": [
+                        "https://splunk.com"
+                    ],
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Scan ID",
                     "column_order": 4
                 },
                 {
@@ -317,18 +317,6 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.url",
-                    "data_type": "string",
-                    "example_values": [
-                        "https://splunk.com"
-                    ],
-                    "contains": [
-                        "url"
-                    ],
-                    "column_name": "Url",
-                    "column_order": 2
-                },
-                {
                     "data_path": "action_result.summary.num_projects",
                     "data_type": "numeric",
                     "example_values": [
@@ -366,7 +354,6 @@
             "action": "get project",
             "identifier": "get_project",
             "description": "Get information about a project",
-            "verbose": "",
             "type": "investigate",
             "read_only": true,
             "parameters": {
@@ -386,7 +373,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -398,16 +386,6 @@
                     "example_values": [
                         2
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "triggered",
-                        "manual"
-                    ],
-                    "column_name": "Automation Mode",
-                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.completed",
@@ -434,7 +412,7 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 0
                 },
                 {
@@ -458,16 +436,25 @@
                     "column_order": 1
                 },
                 {
-                    "data_path": "action_result.data.*.scan-id",
+                    "data_path": "action_result.data.*.url",
                     "data_type": "string",
                     "example_values": [
-                        "n_6db5d7648f6042e295c8f36425982e4d"
+                        "https://splunk.com"
                     ],
                     "contains": [
-                        "tala scan id"
+                        "url"
                     ],
-                    "column_name": "Scan Id",
-                    "column_order": 5
+                    "column_name": "URL",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.automationMode",
+                    "data_type": "string",
+                    "example_values": [
+                        "manual"
+                    ],
+                    "column_name": "New Automation Mode",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.scan-status",
@@ -477,6 +464,18 @@
                     ],
                     "column_name": "Status",
                     "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.scan-id",
+                    "data_type": "string",
+                    "example_values": [
+                        "n_6db5d7648f6042e295c8f36425982e4d"
+                    ],
+                    "contains": [
+                        "tala scan id"
+                    ],
+                    "column_name": "Scan ID",
+                    "column_order": 5
                 },
                 {
                     "data_path": "action_result.data.*.scans.failed-scans",
@@ -528,23 +527,8 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.url",
-                    "data_type": "string",
-                    "example_values": [
-                        "https://www.amazon.com/"
-                    ],
-                    "contains": [
-                        "url"
-                    ],
-                    "column_name": "Url",
-                    "column_order": 2
-                },
-                {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -597,7 +581,6 @@
                     "contains": [
                         "tala project name"
                     ],
-                    "required": false,
                     "primary": true,
                     "order": 1
                 },
@@ -607,15 +590,12 @@
                     "contains": [
                         "url"
                     ],
-                    "required": false,
                     "primary": true,
                     "order": 2
                 },
                 "automation_mode": {
                     "description": "Means of deploying a policy. 'manual' indicates a control via UI and 'triggered' indicates control via APIs",
                     "data_type": "string",
-                    "required": false,
-                    "primary": false,
                     "value_list": [
                         "",
                         "manual",
@@ -629,7 +609,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -671,15 +652,6 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.automationMode",
-                    "data_type": "string",
-                    "example_values": [
-                        "manual"
-                    ],
-                    "column_name": "New Automation Mode",
-                    "column_order": 3
-                },
-                {
                     "data_path": "action_result.data.*.id",
                     "data_type": "numeric",
                     "example_values": [
@@ -688,7 +660,7 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 0
                 },
                 {
@@ -712,15 +684,12 @@
                     "contains": [
                         "url"
                     ],
-                    "column_name": "New Url",
+                    "column_name": "New URL",
                     "column_order": 2
                 },
                 {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -753,7 +722,6 @@
             "action": "delete project",
             "identifier": "delete_project",
             "description": "Delete a project",
-            "verbose": "",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -773,7 +741,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -811,7 +780,7 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 1
                 },
                 {
@@ -836,10 +805,7 @@
                 },
                 {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -892,7 +858,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -914,15 +881,6 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.error.error-message",
-                    "data_type": "string",
-                    "example_values": [
-                        "No Scan Details in Database."
-                    ],
-                    "column_name": "Error Message",
-                    "column_order": 3
-                },
-                {
                     "data_path": "action_result.data.*.project-id",
                     "data_type": "string",
                     "example_values": [
@@ -931,7 +889,7 @@
                     "contains": [
                         "tala project id"
                     ],
-                    "column_name": "Project Id",
+                    "column_name": "Project ID",
                     "column_order": 0
                 },
                 {
@@ -943,7 +901,7 @@
                     "contains": [
                         "tala scan id"
                     ],
-                    "column_name": "Scan Id",
+                    "column_name": "Scan ID",
                     "column_order": 1
                 },
                 {
@@ -955,6 +913,15 @@
                     ],
                     "column_name": "Success",
                     "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.error.error-message",
+                    "data_type": "string",
+                    "example_values": [
+                        "No Scan Details in Database."
+                    ],
+                    "column_name": "Error Message",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.summary.message",
@@ -994,7 +961,6 @@
             "action": "get scan settings",
             "identifier": "get_scan_setting",
             "description": "Retrieve the settings related to scanning a project",
-            "verbose": "",
             "type": "investigate",
             "read_only": true,
             "parameters": {
@@ -1014,7 +980,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -1035,13 +1002,43 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.scan-config.max-pages",
+                    "data_type": "numeric",
+                    "example_values": [
+                        50
+                    ],
+                    "column_name": "Max Pages",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.scan-config.callback-url",
+                    "data_type": "string",
+                    "example_values": [
+                        "http://10.10.1.209:8081/api/scan/complete"
+                    ],
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Callback URL",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.scan-config.url-filter-pattern-regex-inclusive",
+                    "data_type": "string",
+                    "example_values": [
+                        "^http(s)?\\Q://www.phantom.us/\\E*.*"
+                    ],
+                    "column_name": "Regex",
+                    "column_order": 2
+                },
+                {
                     "data_path": "action_result.data.*.policy-preferences.enforcement-type",
                     "data_type": "string",
                     "example_values": [
                         "report-only"
                     ],
                     "column_name": "Enforcement Type",
-                    "column_order": 4
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.policy-preferences.frame-ancestors",
@@ -1053,24 +1050,12 @@
                     "example_values": [
                         "tala-cloud"
                     ],
-                    "column_name": "Report Uri",
-                    "column_order": 5
+                    "column_name": "Report URI",
+                    "column_order": 4
                 },
                 {
                     "data_path": "action_result.data.*.scan-config.auth-info",
                     "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.scan-config.callback-url",
-                    "data_type": "string",
-                    "example_values": [
-                        "http://10.10.1.209:8081/api/scan/complete"
-                    ],
-                    "contains": [
-                        "url"
-                    ],
-                    "column_name": "Callback Url",
-                    "column_order": 2
                 },
                 {
                     "data_path": "action_result.data.*.scan-config.clickables-config.profile",
@@ -1087,36 +1072,12 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.scan-config.max-pages",
-                    "data_type": "numeric",
-                    "example_values": [
-                        50
-                    ],
-                    "column_name": "Max Pages",
-                    "column_order": 0
-                },
-                {
                     "data_path": "action_result.data.*.scan-config.url-filter-pattern-regex-exclusive",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.scan-config.url-filter-pattern-regex-inclusive",
-                    "data_type": "string",
-                    "example_values": [
-                        "^http(s)?\\Q://www.phantom.us/\\E*.*"
-                    ],
-                    "column_name": "Regex",
-                    "column_order": 3
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -1168,7 +1129,8 @@
                 {
                     "data_path": "action_result.status",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ],
                     "data_type": "string"
                 },
@@ -1578,8 +1540,6 @@
                 "server_conf": {
                     "description": "Server configuration",
                     "data_type": "string",
-                    "required": false,
-                    "primary": false,
                     "order": 2
                 }
             },
@@ -1588,7 +1548,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -1644,15 +1605,12 @@
                         "vault id",
                         "sha1"
                     ],
-                    "column_name": "Vault Id",
+                    "column_name": "Vault ID",
                     "column_order": 1
                 },
                 {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -1715,7 +1673,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -1729,6 +1688,19 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.vault_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+                    ],
+                    "contains": [
+                        "sha1",
+                        "vault id"
+                    ],
+                    "column_name": "Vault ID",
+                    "column_order": 0
+                },
+                {
                     "data_path": "action_result.parameter.scan_id",
                     "data_type": "string",
                     "contains": [
@@ -1737,7 +1709,7 @@
                     "example_values": [
                         "n_6db5d7648f6042e295c8f36425982e4d"
                     ],
-                    "column_name": "Scan Id",
+                    "column_name": "Scan ID",
                     "column_order": 1
                 },
                 {
@@ -1757,24 +1729,8 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.vault_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-                    ],
-                    "contains": [
-                        "sha1",
-                        "vault id"
-                    ],
-                    "column_name": "Vault Id",
-                    "column_order": 0
-                },
-                {
                     "data_path": "action_result.summary",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",

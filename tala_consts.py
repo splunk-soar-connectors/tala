@@ -1,6 +1,6 @@
 # File: tala_consts.py
 #
-# Copyright (c) 2018-2019 Splunk Inc.
+# Copyright (c) 2018-2021 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,3 +20,4 @@ TALA_DELETE_PROJECT_SUCC = "Successfully deleted project"
 TALA_UPDATE_PROJECT_SETTINGS_SUCC = "Successfully updated project settings"
 TALA_ALREADY_DELETED_PROJECT_SUCC = "Project not found in Tala"
 TALA_GET_SUMMARY_SUCC = "Successfully retrieved results"
+TALA_DOWNLOAD_POLICY_BUNDLE_SUCC = "Successfully added file to vault"
