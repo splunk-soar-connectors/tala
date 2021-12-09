@@ -1,2 +1,2 @@
 **Unreleased**
-* Releasing as open-source Community app [PAPP-21787]
+* Releasing as a community-supported app [PAPP-21787]
