@@ -172,7 +172,8 @@ class TalaConnector(BaseConnector):
             r = requests.post(
                 str(url),
                 json=json,
-                headers={ 'Content-Type': 'application/json' }
+                headers={ 'Content-Type': 'application/json' },
+                timeout=60
             )
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
