@@ -173,7 +173,7 @@ class TalaConnector(BaseConnector):
                 str(url),
                 json=json,
                 headers={ 'Content-Type': 'application/json' }
-            )
+            )   # nosemgrep
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "{}".format(str(e)))
 
