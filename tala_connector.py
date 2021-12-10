@@ -14,7 +14,6 @@
 # and limitations under the License.
 #
 #
-# without a valid written license from Splunk Inc. is PROHIBITED.# Phantom App imports
 import datetime
 import json
 import os
