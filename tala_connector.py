@@ -1,23 +1,35 @@
 # File: tala_connector.py
-# Copyright (c) 2018-2019 Splunk Inc.
 #
-# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
-# without a valid written license from Splunk Inc. is PROHIBITED.# Phantom App imports
+# Copyright (c) 2018-2021 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions
+# and limitations under the License.
+#
+#
+import datetime
+import json
+import os
+import uuid
 
 import phantom.app as phantom
-from phantom.base_connector import BaseConnector
+import phantom.rules as ph_rules
+# import shutil
+import requests
+from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
-from phantom.vault import Vault as Vault
+from phantom.base_connector import BaseConnector
+from phantom.vault import Vault
 
 # Usage of the consts file is recommended
 from tala_consts import *
-import uuid
-import os
-# import shutil
-import requests
-import json
-import datetime
-from bs4 import BeautifulSoup
 
 
 class RetVal(tuple):
@@ -53,11 +65,14 @@ class TalaConnector(BaseConnector):
 
         try:
             soup = BeautifulSoup(response.text, "html.parser")
+            # Remove the script, style, footer and navigation part from the HTML message
+            for element in soup(["script", "style", "footer", "nav"]):
+                element.extract()
             error_text = soup.text
             split_lines = error_text.split('\n')
             split_lines = [x.strip() for x in split_lines if x.strip()]
             error_text = '\n'.join(split_lines)
-        except:
+        except Exception:
             error_text = "Cannot parse error details"
 
         if 200 <= status_code < 399:
@@ -76,7 +91,8 @@ class TalaConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(str(e))), None)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(
+                str(e))), None)
 
         # Please specify the status codes here
         if 200 <= r.status_code < 399:
@@ -142,7 +158,8 @@ class TalaConnector(BaseConnector):
                             verify=config.get('verify_server_cert', False),
                             params=params)
         except Exception as e:
-            return RetVal(action_result.set_status( phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(str(e))), resp_json)
+            return RetVal(action_result.set_status( phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(
+                str(e))), resp_json)
 
         return self._process_response(r, action_result)
 
@@ -151,7 +168,7 @@ class TalaConnector(BaseConnector):
 
         url = self._base_url + endpoint
         try:
-            r = requests.post(
+            r = requests.post(  # nosemgrep
                 str(url),
                 json=json,
                 headers={ 'Content-Type': 'application/json' }
@@ -161,7 +178,11 @@ class TalaConnector(BaseConnector):
 
         if hasattr(Vault, 'get_vault_tmp_dir'):
             try:
-                vault_ret = Vault.create_attachment(r.content, self.get_container_id(), file_name=file_name)
+                success, message, new_vault_id = ph_rules.vault_add(
+                    container=self.get_container_id(),
+                    file_location=r.content,
+                    file_name=file_name
+                )
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Could not add file to vault: {0}".format(e))
         else:
@@ -181,14 +202,26 @@ class TalaConnector(BaseConnector):
 
             vault_path = "{}/{}".format(tmp_dir, file_name)
 
-            vault_ret = Vault.add_attachment(vault_path, self.get_container_id(), file_name=file_name)
+            success, message, new_vault_id = ph_rules.vault_add(
+                container=self.get_container_id(),
+                file_location=vault_path,
+                file_name=file_name
+            )
 
-        if vault_ret.get('succeeded'):
+        if success:
             action_result.set_status(phantom.APP_SUCCESS, "Transferred file")
+            # Check if file with same file name and size is available in vault and save only if it is not available
+            try:
+                _, _, data = ph_rules.vault_info(container_id=self.get_container_id(), vault_id=new_vault_id, file_name=file_name)
+                data = list(data)[0]
+                file_size = data.get('size')
+            except Exception:
+                return action_result.set_status(phantom.APP_ERROR, "Error: failed to find vault ID: {}".format(new_vault_id))
+
             action_result.add_data({
-                            phantom.APP_JSON_VAULT_ID: vault_ret[phantom.APP_JSON_HASH],
+                            phantom.APP_JSON_VAULT_ID: new_vault_id,
                             phantom.APP_JSON_NAME: file_name,
-                            phantom.APP_JSON_SIZE: vault_ret.get(phantom.APP_JSON_SIZE)
+                            phantom.APP_JSON_SIZE: file_size
                         })
             action_result.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
         else:
@@ -212,7 +245,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project', action_result, params=None, headers=headers)
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
 
@@ -241,7 +274,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project', action_result, json=request, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Add the response into the data section
@@ -272,7 +305,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project', action_result, params=param, headers=headers)
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         data = dict()
@@ -285,7 +318,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         data.update(response)
@@ -294,7 +327,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan/status', action_result, json=headers, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         for item in response:
@@ -305,7 +338,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(data)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_PROJECT_SUCC)
 
@@ -323,7 +356,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project', action_result, headers=headers)
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         data = dict()
@@ -340,7 +373,7 @@ class TalaConnector(BaseConnector):
             # make rest call
             ret_val, response = self._make_rest_call('/project/settings', action_result, params=params, headers=headers)
 
-            if (phantom.is_fail(ret_val)):
+            if phantom.is_fail(ret_val):
                 return action_result.get_status()
 
             data[int(project_id)].update(response)
@@ -349,7 +382,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan/status', action_result, json=headers, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         for item in response:
@@ -381,15 +414,17 @@ class TalaConnector(BaseConnector):
         if name or url:
             request = {
                 "auth-token": self._auth_token,
-                "id": project_id,
-                "name": name,
-                "url": url
+                "id": project_id
             }
+            if name:
+                request["name"] = name
+            if url:
+                request["url"] = url
 
             # make rest call
             ret_val, response = self._make_rest_call('/project', action_result, json=request, method='put')
 
-            if (phantom.is_fail(ret_val)):
+            if phantom.is_fail(ret_val):
                 return action_result.get_status()
 
             data.update(response)
@@ -404,7 +439,7 @@ class TalaConnector(BaseConnector):
             # make rest call
             ret_val, response = self._make_rest_call('/project/settings', action_result, json=settings_request, method='put')
 
-            if (phantom.is_fail(ret_val)):
+            if phantom.is_fail(ret_val):
                 return action_result.get_status()
 
             data.update(response)
@@ -415,7 +450,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(data)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_UPDATE_PROJECT_SUCC)
 
@@ -436,7 +471,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/project', action_result, params=params, headers=headers, method='delete')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             message = action_result.get_message()
             if 'project not found' in message.lower():
                 return action_result.set_status(phantom.APP_SUCCESS, TALA_ALREADY_DELETED_PROJECT_SUCC)
@@ -445,7 +480,7 @@ class TalaConnector(BaseConnector):
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_DELETE_PROJECT_SUCC)
 
@@ -462,7 +497,7 @@ class TalaConnector(BaseConnector):
 
         try:
             project_ids_list = [int(x) for x in project_ids.split(",")]
-        except:
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
@@ -473,7 +508,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan', action_result, json=request, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Add the response into the data section
@@ -507,13 +542,13 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan/settings', action_result, params=params, headers=headers)
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SCAN_SETTINGS_SUCC)
 
@@ -531,7 +566,7 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan/status', action_result, json=request, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Add the response into the data section
@@ -565,13 +600,13 @@ class TalaConnector(BaseConnector):
         # make rest call
         ret_val, response = self._make_rest_call('/scan/summary', action_result, json=request, method='post')
 
-        if (phantom.is_fail(ret_val)):
+        if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Add the response into the data section
         action_result.add_data(response)
 
-        # Return success, no need to set the message, only the status
+        # Return success status with appropriate message
         # BaseConnector will create a textual message based off of the summary dictionary
         return action_result.set_status(phantom.APP_SUCCESS, TALA_GET_SUMMARY_SUCC)
 
@@ -587,7 +622,7 @@ class TalaConnector(BaseConnector):
         project_id = param['project_ids']
         try:
             [int(x) for x in project_id.split(",")]
-        except:
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         tracking_id = str(param['tracking_id'])
@@ -607,21 +642,21 @@ class TalaConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return self.set_status(phantom.APP_ERROR)
 
-        if server_conf:  # call /deploy - download web server injection module, template matching library, AIM policy
+        if server_conf:
             request = {
                 "auth-token": self._auth_token,
                 "serverconf": server_conf
             }
             file_name = "tala_enforcement_module_{}.zip".format(server_conf)
 
+            # call /deploy - download web server injection module, template matching library, AIM policy
             ret_val = self._download_file_to_vault(action_result, '/deploy', json=request, file_name=file_name)
 
             if phantom.is_fail(ret_val):
                 return self.set_status(phantom.APP_ERROR)
 
-            return self.set_status(phantom.APP_SUCCESS, "Successfully added files to vault")
-
-        return self.set_status(phantom.APP_SUCCESS, "Successfully added file to vault")
+        # Return success status with appropriate message
+        return self.set_status(phantom.APP_SUCCESS, TALA_DOWNLOAD_POLICY_BUNDLE_SUCC)
 
     def _handle_synchronize_projects(self, param):
 
@@ -636,7 +671,7 @@ class TalaConnector(BaseConnector):
         project_ids = param['project_ids']
         try:
             project_ids_formatted = [int(x) for x in project_ids.split(",")]
-        except:
+        except Exception:
             return action_result.set_status(phantom.APP_ERROR, "Valid project id(s) required")
 
         request = {
@@ -725,8 +760,10 @@ class TalaConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import pudb
     import argparse
+    import sys
+
+    import pudb
 
     pudb.set_trace()
 
@@ -735,23 +772,28 @@ if __name__ == '__main__':
     argparser.add_argument('input_test_json', help='Input Test JSON file')
     argparser.add_argument('-u', '--username', help='username', required=False)
     argparser.add_argument('-p', '--password', help='password', required=False)
+    argparser.add_argument('-v', '--verify', action='store_true', help='verify', required=False, default=False)
 
     args = argparser.parse_args()
     session_id = None
 
     username = args.username
     password = args.password
+    verify = args.verify
 
-    if (username is not None and password is None):
+    if username is not None and password is None:
 
         # User specified a username but not a password, so ask
         import getpass
         password = getpass.getpass("Password: ")
 
-    if (username and password):
+    if username and password:
         try:
-            print ("Accessing the Login page")
-            r = requests.get("https://127.0.0.1/login", verify=False)
+
+            login_url = TalaConnector._get_phantom_base_url() + '/login'
+
+            print("Accessing the Login page")
+            r = requests.get(login_url, verify=verify, timeout=60)
             csrftoken = r.cookies['csrftoken']
 
             data = dict()
@@ -761,14 +803,14 @@ if __name__ == '__main__':
 
             headers = dict()
             headers['Cookie'] = 'csrftoken=' + csrftoken
-            headers['Referer'] = 'https://127.0.0.1/login'
+            headers['Referer'] = login_url
 
-            print ("Logging into Platform to get the session id")
-            r2 = requests.post("https://127.0.0.1/login", verify=False, data=data, headers=headers)
+            print("Logging into Platform to get the session id")
+            r2 = requests.post(login_url, verify=verify, data=data, headers=headers, timeout=60)
             session_id = r2.cookies['sessionid']
         except Exception as e:
-            print ("Unable to get session id from the platfrom. Error: " + str(e))
-            exit(1)
+            print("Unable to get session id from the platfrom. Error: " + str(e))
+            sys.exit(1)
 
     with open(args.input_test_json) as f:
         in_json = f.read()
@@ -778,11 +820,11 @@ if __name__ == '__main__':
         connector = TalaConnector()
         connector.print_progress_message = True
 
-        if (session_id is not None):
+        if session_id is not None:
             in_json['user_session_token'] = session_id
             connector._set_csrf_info(csrftoken, headers['Referer'])
 
         ret_val = connector._handle_action(json.dumps(in_json), None)
-        print (json.dumps(json.loads(ret_val), indent=4))
+        print(json.dumps(json.loads(ret_val), indent=4))
 
-    exit(0)
+    sys.exit(0)
